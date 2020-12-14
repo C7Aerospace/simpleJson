@@ -2,45 +2,36 @@
 using System.Collections.Generic;
 namespace JsonSharp
 {
-    public enum JsonValueType {
-        str = 1,
-        number = 2,
-        json = 3,
-        array = 4,
+    public enum ValueType {
+        json = 0,
+        array = 1,
+        str = 2,
+        integer = 3,
+        number = 4,
         boolean = 5,
         nulltype = -1
     }
     // String Readers
-    static class Reader {
-        public static string Escape(string val) {
-            return val
-                .Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\n", "\\n")
-                .Replace("\b", "\\b")
-                .Replace("\0", "\\0")
-                .Replace("\a", "\\a")
-                .Replace("\f", "\\f")
-                .Replace("\r", "\\r")
-                .Replace("\t", "\\t")
-                .Replace("\v", "\\v")
-            ;
+    public static class Reader {
+        public static bool IsSpace(char ch) {
+            return (
+                ch == ' ' ||
+                ch == '\n' ||
+                ch == '\r' ||
+                ch == '\t' ||
+                ch == '\f'
+                );
         }
-        // Read a string type.
-        public static string ReadString(string str) {
-            int p = 0;
-            return ReadString(str, ref p);
+        public static void IgnoreSpaces(ref string str, ref int ptr) {
+            while(IsSpace(str[ptr])) ptr++;
         }
-        public static string ReadString(string str, ref int p) {
+        public static string ReadString(ref string str, ref int ptr) {
+            if(str[ptr] != '\"') throw new Exception("Expected \"\"\" at the head of a string definition.");
             string ret = "";
-            p++;
-            while(true) {
-                if(str[p] == '\"') {
-                    p++;
-                    return ret;
-                }
-                if(str[p] == '\\') {
-                    switch(str[p + 1]) {
+            ptr++;
+            while(str[ptr] != '\"') {
+                if(str[ptr] == '\\') {
+                    switch(str[ptr + 1]) {
                         case '\\': { ret += '\\'; break; }
                         case '\"': { ret += '\"'; break; }
                         case 'n': { ret += '\n'; break; }
@@ -52,212 +43,222 @@ namespace JsonSharp
                         case 't': { ret += '\t'; break; }
                         case 'v': { ret += '\v'; break; }
                     }
-                    p += 2;
+                    ptr += 2;
                     continue;
                 }
-                ret += str[p];
-                p++;
+                ret += str[ptr];
+                ptr++;
             }
+            ptr++;
+            return ret;
         }
-        // Read a string type, but return the original string
-        public static string ReadRawString(string str, ref int p) {
-            string ret = "\"";
-            p++;
-            while(true) {
-                if(str[p] == '\"') {
-                    ret += '\"';
-                    p++;
-                    return ret;
-                }
-                if(str[p] == '\\') {
-                    ret += '\\';
-                    ret += str[p + 1];;
-                    p += 2;
-                    continue;
-                }
-                ret += str[p];
-                p++;
-            }
+        public static string ReadString(string str) {
+            int ptr = 0;
+            return ReadString(ref str, ref ptr);
         }
-        // Read to next comma
-        public static string ReadToComma(string str, ref int p) {
+        public static string ReadToEnd(ref string str, ref int ptr) {
             string ret = "";
-            int depth = 0;
-            while(true) {
-                if(str[p] == ',' && depth == 0) return ret;
-                if(str[p] == '{' || str[p] == '[') depth++;
-                if(str[p] == '}' || str[p] == ']') depth--;
-                if(str[p] == '"') {
-                    ret += Reader.ReadRawString(str, ref p);
-                    continue;
-                } else {
-                    ret += str[p];
-                    p++;
-                }
+            while(
+                ptr < str.Length &&
+                str[ptr] != ',' && 
+                str[ptr] != '}' && 
+                str[ptr] != ']') ret += str[ptr++];
+            ptr++;
+            return ret.Trim();
+        }
+        public static string Escape(string str) {
+            string ret = "";
+            foreach(char i in str) {
+                switch(i) {
+                        case '\\': { ret += "\\\\"; break; }
+                        case '\"': { ret += "\\\""; break; }
+                        case '\n': { ret += "\\n"; break; }
+                        case '\b': { ret += "\\b"; break; }
+                        case '\0': { ret += "\\0"; break; }
+                        case '\a': { ret += "\\a"; break; }
+                        case '\f': { ret += "\\f"; break; }
+                        case '\r': { ret += "\\r"; break; }
+                        case '\t': { ret += "\\t"; break; }
+                        case '\v': { ret += "\\v"; break; }
+                        default: { ret += i; break; }
+                    }
             }
+            return ret;
         }
     }
-    // Value type.
     public class JsonValue {
-        public JsonValueType type;
-        public object value;
-        public JsonValue(JsonValueType type, object value) {
+        ValueType type;
+        object value;
+        public JsonValue(ValueType type, object value) {
             this.type = type;
             this.value = value;
         }
+        public static JsonValue Parse(ref string json, ref int ptr) {
+            if(json[ptr] == '\"')
+                return new JsonValue(ValueType.str, Reader.ReadString(ref json, ref ptr));
+            if(json[ptr] == '{')
+                return new JsonValue(ValueType.json, JsonObject.Parse(ref json, ref ptr));
+            if(json[ptr] == '[')
+                return new JsonValue(ValueType.array, JsonArray.Parse(ref json, ref ptr));
+            string content = Reader.ReadToEnd(ref json, ref ptr);
+            if(content == "null")
+                return new JsonValue(ValueType.nulltype, null);
+            if(content == "true" || content == "false")
+                return new JsonValue(ValueType.boolean, content == "true" ? true : false);
+            Int64 retInt64;
+            if(!content.Contains(".") && Int64.TryParse(content, out retInt64))
+                return new JsonValue(ValueType.integer, retInt64);
+            else
+                return new JsonValue(ValueType.number, decimal.Parse(content));
+        }
         public static JsonValue Parse(string json) {
-            json = json.Trim();
-            if(json[0] == '\"' && json[json.Length - 1] == '\"')
-                return new JsonValue(JsonValueType.str, Reader.ReadString(json));
-            if(json == "true" || json == "false")
-                return new JsonValue(JsonValueType.boolean, bool.Parse(json));
-            if(json[0] == '{' && json[json.Length - 1] == '}')
-                return new JsonValue(JsonValueType.json, JsonObject.Parse(json));
-            if(json[0] == '[' && json[json.Length - 1] == ']')
-                return new JsonValue(JsonValueType.array, JsonArray.Parse(json));
-            if(json == "null")
-                return new JsonValue(JsonValueType.nulltype, null);
-            decimal dem;
-            if(decimal.TryParse(json, out dem))
-                return new JsonValue(JsonValueType.number, dem);
-            return null;
+            int ptr = 0;
+            return JsonValue.Parse(ref json, ref ptr);
         }
         public override string ToString() {
             switch(type) {
-                case JsonValueType.str:
-                    return "\"" + Reader.Escape(value.ToString()) + "\"";
-                case JsonValueType.nulltype:
-                    return "null";
-                case JsonValueType.boolean:
-                    return (bool)value ? "true" : "false";
+                case ValueType.nulltype: return "null";
+                case ValueType.str: return "\"" + Reader.Escape(value.ToString()) + "\"";
+                case ValueType.boolean: return (bool)value ? "true" : "false";
                 default: return value.ToString();
             }
         }
-        public string Format(int depth = 0, string tab = "    ") {
+        public string Serialize(int depth = 0, string tab = "    ") {
             switch(type) {
-                case JsonValueType.json: return ((JsonObject)value).Format(depth, tab);
-                case JsonValueType.array: return ((JsonArray)value).Format(depth, tab);
+                case ValueType.json: return ((JsonObject)value).Serialize(depth, tab);
+                case ValueType.array: return ((JsonArray)value).Serialize(depth, tab);
                 default: return this.ToString();
             }
         }
     }
-    // Array Object
     public class JsonArray {
-        public List<JsonValue> array;
+        public List<JsonValue> elements;
         public JsonArray() {
-            array = new List<JsonValue>();
+            elements = new List<JsonValue>();
         }
-        public JsonArray(JsonValue[] values) {
-            array = new List<JsonValue>();
-            foreach(JsonValue value in values)
-                array.Add(value);
+        public JsonValue this[int index] {
+            get { return elements[index]; }
+            set { elements[index] = value; }
+        }
+        public static JsonArray Parse(ref string json, ref int ptr) {
+            JsonArray ret = new JsonArray();
+            Reader.IgnoreSpaces(ref json, ref ptr);
+            if(json[ptr] != '[') throw new Exception("Expected \"[\" of a array definition.");
+            ptr++;
+            Reader.IgnoreSpaces(ref json, ref ptr);
+            if(json[ptr] == ']') return ret;
+            while(ptr < json.Length) {
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                JsonValue val = JsonValue.Parse(ref json, ref ptr);
+                ret.elements.Add(val);
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                if(json[ptr] == ',') ptr++;
+                else if(json[ptr] == ']') break;
+                else throw new Exception("Excepted \",\" or \"}\" after a Key-Value pair.");
+            }
+            ptr++;
+            return ret;
         }
         public static JsonArray Parse(string json) {
-            json = json.Substring(1, json.Length - 2) + ",";
-            JsonArray ret = new JsonArray();
-            int p = 0;
-            if(json == ",") return ret;
-            while(p < json.Length) {
-                string val = Reader.ReadToComma(json, ref p);
-                ret.array.Add(JsonValue.Parse(val));
-                p++;
-            }
-            return ret;
+            int ptr = 0;
+            return JsonArray.Parse(ref json, ref ptr);
         }
         public override string ToString() {
             string ret = "[";
-            for(int i = 0; i < array.Count; i++) {
-                ret += array[i].ToString();
-                if(i != array.Count - 1)
+            for(int i = 0; i < elements.Count; i++) {
+                ret += elements[i].ToString();
+                if(i != elements.Count - 1)
                     ret += ", ";
             }
             ret += "]";
             return ret;
         }
-        public string Format(int depth = 0, string tab = "    ") {
-            string basicTab = "";
+        public string Serialize(int depth = 0, string tab = "    ") {
+            string prefixTab = "";
             for(int i = 1; i <= depth; i++)
-                basicTab += tab;
+                prefixTab += tab;
             string ret = "[\n";
-            for(int i = 0; i < array.Count; i++) {
-                ret += basicTab + tab;
-                ret += array[i].Format(depth + 1, tab);
-                if(i != array.Count - 1)
+            for(int i = 0; i < elements.Count; i++) {
+                ret += prefixTab + tab + elements[i].Serialize(depth + 1, tab);
+                if(i != elements.Count - 1)
                     ret += ", ";
                 ret += '\n';
             }
-            ret += basicTab + "]"; 
+            ret += prefixTab + "]";
             return ret;
         }
     }
-    // JSON Object
     public class JsonObject {
-        public List<KeyValuePair<string, JsonValue>> valuePairs;
+        Dictionary<string, JsonValue> pairs;
+        List<string> keys;
         public JsonObject() {
-            valuePairs = new List<KeyValuePair<string, JsonValue>>();
+            pairs = new Dictionary<string, JsonValue>();
+            keys = new List<string>();
+        }
+        public void Add(string key, JsonValue val) {
+            pairs.Add(key, val);
+            keys.Add(key);
+        }
+        public void Delete(string key) {
+            pairs.Remove(key);
+            keys.Remove(key);
         }
         public JsonValue this[string index] {
-            get {
-                foreach(KeyValuePair<string, JsonValue> pair in valuePairs) {
-                    if(pair.Key == index)
-                        return pair.Value;
-                }
-                throw new KeyNotFoundException();
-            } set {
-                for(int i = 0; i < valuePairs.Count; i++)
-                    if(valuePairs[i].Key == index) {
-                        valuePairs[i] = new KeyValuePair<string, JsonValue>(index, value);
-                    }
-                throw new KeyNotFoundException();
+            get { return pairs[index]; }
+            set { pairs[index] = value; }
+        }
+        public static JsonObject Parse(ref string json, ref int ptr) {
+            JsonObject ret = new JsonObject();
+            Reader.IgnoreSpaces(ref json, ref ptr);
+            if(json[ptr] != '{') throw new Exception("Expected \"{\" of a JSON object definition.");
+            ptr++;
+            Reader.IgnoreSpaces(ref json, ref ptr);
+            if(json[ptr] == '}') return ret;
+            while(ptr < json.Length) {
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                string key = Reader.ReadString(ref json, ref ptr);
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                if(json[ptr] != ':') throw new Exception("Expected \":\" after key.");
+                ptr++;
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                JsonValue val = JsonValue.Parse(ref json, ref ptr);
+                ret.Add(key, val);
+                Reader.IgnoreSpaces(ref json, ref ptr);
+                if(json[ptr] == ',') ptr++;
+                else if(json[ptr] == '}') break;
+                else throw new Exception("Excepted \",\" or \"}\" after a Key-Value pair.");
             }
+            ptr++;
+            return ret;
         }
         public static JsonObject Parse(string json) {
-            JsonObject ret = new JsonObject();
-            json = json.Replace("\n", "");
-            json = json.Replace("\b", "");
-            json = json.Replace("\0", "");
-            json = json.Replace("\a", "");
-            json = json.Replace("\f", "");
-            json = json.Replace("\r", "");
-            json = json.Replace("\t", "");
-            json = json.Replace("\v", "");
-            json = json.Substring(1, json.Length - 2).Trim() + ',';
-            int p = 0;
-            if(json == ",") return ret;
-            while(p < json.Length) {
-                while(json[p] != '\"') p++;
-                string key = Reader.ReadString(json, ref p);
-                while(json[p] != ':') p++; p++;
-                string valString = Reader.ReadToComma(json, ref p);
-                ret.valuePairs.Add(new KeyValuePair<string, JsonValue>(key, JsonValue.Parse(valString)));            
-                while(json[p] != ',') p++; p++;
-            }
-            return ret;
+            int ptr = 0;
+            return JsonObject.Parse(ref json, ref ptr);
         }
         public override string ToString() {
             string ret = "{";
-            for(int i = 0; i < valuePairs.Count; i++) {
-                ret += "\"" + valuePairs[i].Key + "\": " + valuePairs[i].Value.ToString();
-                if(i != valuePairs.Count - 1)
-                    ret += ", "; 
+            for(int i = 0; i < keys.Count; i++) {
+                ret += "\"" + Reader.Escape(keys[i]) + "\": ";
+                ret += pairs[keys[i]].ToString();
+                if(i != keys.Count - 1)
+                    ret += ", ";
             }
             ret += "}";
             return ret;
         }
-        public string Format(int depth = 0, string tab = "    ") {
-            string basicTab = "";
+        public string Serialize(int depth = 0, string tab = "    ") {
+            string prefixTab = "";
             for(int i = 1; i <= depth; i++)
-                basicTab += tab;
+                prefixTab += tab;
             string ret = "{\n";
-            for(int i = 0; i < valuePairs.Count; i++) {
-                ret += basicTab + tab;
-                ret += "\"" + Reader.Escape(valuePairs[i].Key) + "\": ";
-                ret += valuePairs[i].Value.Format(depth + 1, tab);
-                if(i != valuePairs.Count - 1)
+            for(int i = 0; i < keys.Count; i++) {
+                ret += prefixTab + tab + "\"" + Reader.Escape(keys[i]) + "\": ";
+                ret += pairs[keys[i]].Serialize(depth, tab);
+                if(i != keys.Count - 1)
                     ret += ", ";
                 ret += '\n';
             }
-            ret += basicTab + "}"; 
+            ret += prefixTab + "}";
             return ret;
         }
     }

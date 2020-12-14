@@ -8,8 +8,12 @@ namespace Tester
     {
         static void Main(string[] args)
         {   
-            System.IO.File.WriteAllText("serialize.json",
-                JsonObject.Parse(System.IO.File.ReadAllText("hmcl.json")).ToString());
+            string read = System.IO.File.ReadAllText("hmcl.json");
+            DateTime now = DateTime.Now;
+            JsonObject obj = JsonObject.Parse(read);
+            DateTime finish = DateTime.Now;
+            Console.WriteLine("Parse in {0} s", (finish - now).TotalSeconds);
+            System.IO.File.WriteAllText("serialize.json", obj.Format());
         }
     }
 }

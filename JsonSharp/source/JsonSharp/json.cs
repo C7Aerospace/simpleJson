@@ -133,6 +133,13 @@ namespace JsonSharp
                 default: return value.ToString();
             }
         }
+        public string Format(int depth = 0, string tab = "    ") {
+            switch(type) {
+                case JsonValueType.json: return ((JsonObject)value).Format(depth, tab);
+                case JsonValueType.array: return ((JsonArray)value).Format(depth, tab);
+                default: return this.ToString();
+            }
+        }
     }
     // Array Object
     public class JsonArray {
@@ -157,7 +164,6 @@ namespace JsonSharp
             }
             return ret;
         }
-
         public override string ToString() {
             string ret = "[";
             for(int i = 0; i < array.Count; i++) {
@@ -166,6 +172,21 @@ namespace JsonSharp
                     ret += ", ";
             }
             ret += "]";
+            return ret;
+        }
+        public string Format(int depth = 0, string tab = "    ") {
+            string basicTab = "";
+            for(int i = 1; i <= depth; i++)
+                basicTab += tab;
+            string ret = "[\n";
+            for(int i = 0; i < array.Count; i++) {
+                ret += basicTab + tab;
+                ret += array[i].Format(depth + 1, tab);
+                if(i != array.Count - 1)
+                    ret += ", ";
+                ret += '\n';
+            }
+            ret += basicTab + "]"; 
             return ret;
         }
     }
@@ -221,6 +242,22 @@ namespace JsonSharp
                     ret += ", "; 
             }
             ret += "}";
+            return ret;
+        }
+        public string Format(int depth = 0, string tab = "    ") {
+            string basicTab = "";
+            for(int i = 1; i <= depth; i++)
+                basicTab += tab;
+            string ret = "{\n";
+            for(int i = 0; i < valuePairs.Count; i++) {
+                ret += basicTab + tab;
+                ret += "\"" + Reader.Escape(valuePairs[i].Key) + "\": ";
+                ret += valuePairs[i].Value.Format(depth + 1, tab);
+                if(i != valuePairs.Count - 1)
+                    ret += ", ";
+                ret += '\n';
+            }
+            ret += basicTab + "}"; 
             return ret;
         }
     }

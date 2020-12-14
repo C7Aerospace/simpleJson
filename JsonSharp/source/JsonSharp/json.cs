@@ -63,7 +63,6 @@ namespace JsonSharp
                 str[ptr] != ',' && 
                 str[ptr] != '}' && 
                 str[ptr] != ']') ret += str[ptr++];
-            ptr++;
             return ret.Trim();
         }
         public static string Escape(string str) {
@@ -146,7 +145,7 @@ namespace JsonSharp
             if(json[ptr] != '[') throw new Exception("Expected \"[\" of a array definition.");
             ptr++;
             Reader.IgnoreSpaces(ref json, ref ptr);
-            if(json[ptr] == ']') return ret;
+            if(json[ptr] == ']') { ptr++; return ret; };
             while(ptr < json.Length) {
                 Reader.IgnoreSpaces(ref json, ref ptr);
                 JsonValue val = JsonValue.Parse(ref json, ref ptr);
@@ -213,7 +212,7 @@ namespace JsonSharp
             if(json[ptr] != '{') throw new Exception("Expected \"{\" of a JSON object definition.");
             ptr++;
             Reader.IgnoreSpaces(ref json, ref ptr);
-            if(json[ptr] == '}') return ret;
+            if(json[ptr] == '}') { ptr++; return ret; }
             while(ptr < json.Length) {
                 Reader.IgnoreSpaces(ref json, ref ptr);
                 string key = Reader.ReadString(ref json, ref ptr);
@@ -253,7 +252,7 @@ namespace JsonSharp
             string ret = "{\n";
             for(int i = 0; i < keys.Count; i++) {
                 ret += prefixTab + tab + "\"" + Reader.Escape(keys[i]) + "\": ";
-                ret += pairs[keys[i]].Serialize(depth, tab);
+                ret += pairs[keys[i]].Serialize(depth + 1, tab);
                 if(i != keys.Count - 1)
                     ret += ", ";
                 ret += '\n';

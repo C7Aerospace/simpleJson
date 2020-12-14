@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "P8FlQFQAHjTxBnzZaMYQjNl0pqf7mX5AVmbdTuRUaYS91OGiOdvyJeAML3ItpK08HWXSKRITDvc6TobMoHGUCA==",
+  "success": true,
+  "projectFilePath": "D:\\Projects\\JsonSharp\\source\\jsonSharp\\jsonSharp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Isoheptane\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "C:\\Users\\Isoheptane\\.nuget\\packages\\netstandard.library\\2.0.3\\netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,16 @@
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.exe
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.deps.json
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.runtimeconfig.json
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.runtimeconfig.dev.json
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.dll
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\Tester.pdb
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\jsonSharp.dll
+D:\Projects\JsonSharp\source\Tester\bin\Debug\netcoreapp3.1\jsonSharp.pdb
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.csprojAssemblyReference.cache
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.AssemblyInfoInputs.cache
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.AssemblyInfo.cs
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.csproj.CoreCompileInputs.cache
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.csproj.CopyComplete
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.dll
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.pdb
+D:\Projects\JsonSharp\source\Tester\obj\Debug\netcoreapp3.1\Tester.genruntimeconfig.cache

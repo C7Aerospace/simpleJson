@@ -1,0 +1,9 @@
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.csprojAssemblyReference.cache
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.AssemblyInfoInputs.cache
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.AssemblyInfo.cs
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.csproj.CoreCompileInputs.cache
+D:\Projects\JsonSharp\source\JsonSharp\bin\Debug\netstandard2.0\jsonSharp.deps.json
+D:\Projects\JsonSharp\source\JsonSharp\bin\Debug\netstandard2.0\jsonSharp.dll
+D:\Projects\JsonSharp\source\JsonSharp\bin\Debug\netstandard2.0\jsonSharp.pdb
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.dll
+D:\Projects\JsonSharp\source\JsonSharp\obj\Debug\netstandard2.0\jsonSharp.pdb

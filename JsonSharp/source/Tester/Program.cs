@@ -13,15 +13,15 @@ namespace Tester
             string read = System.IO.File.ReadAllText("in.json");
             DateTime now = DateTime.Now;
             // JsonObject obj = JsonObject.Parse(read);
-            JsonObject obj = JsonObject.Parse(read);
+            JsonValue obj = JsonValue.Parse(read);
             DateTime finish = DateTime.Now;
-            Console.WriteLine("Parse in {0} s", (finish - now).TotalSeconds);
+            Console.WriteLine("Parse in {0} ms", (finish - now).TotalMilliseconds);
             now = DateTime.Now;
             string ts = "";
-            ts = obj["nest"].Serialize();
+            ts = obj.Serialize();
             // obj.Serialize(ref strb, "", "    ");
             finish = DateTime.Now;
-            Console.WriteLine("Serialize in {0} s", (finish - now).TotalSeconds);
+            Console.WriteLine("Serialize in {0} ms", (finish - now).TotalMilliseconds);
             System.IO.File.WriteAllText("out.json", ts);
         }
     }

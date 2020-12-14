@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 namespace JsonSharp
 {
@@ -114,20 +115,37 @@ namespace JsonSharp
             int ptr = 0;
             return JsonValue.Parse(ref json, ref ptr);
         }
-        public override string ToString() {
+        public void RawToString(ref StringBuilder strb) {
             switch(type) {
-                case ValueType.nulltype: return "null";
-                case ValueType.str: return "\"" + Reader.Escape(value.ToString()) + "\"";
-                case ValueType.boolean: return (bool)value ? "true" : "false";
-                default: return value.ToString();
+                case ValueType.json: { ((JsonObject)value).RawToString(ref strb); break; }
+                case ValueType.array: { ((JsonArray)value).RawToString(ref strb); break; }
+                default: {
+                    switch(type) {
+                        case ValueType.nulltype: { strb.Append(strb); break;}
+                        case ValueType.str: { strb.Append("\"" + Reader.Escape(value.ToString()) + "\""); break; }
+                        case ValueType.boolean: { strb.Append((bool)value ? "true" : "false"); break; }
+                        default: { strb.Append(value.ToString()); break; }
+                    }
+                    break;
+                };
             }
         }
-        public string Serialize(int depth = 0, string tab = "    ") {
+        public override string ToString() {
+            StringBuilder strb = new StringBuilder();
+            this.RawToString(ref strb);
+            return strb.ToString();
+        }
+        public void Serialize(ref StringBuilder strb, string currentTab = "", string tab = "    ") {
             switch(type) {
-                case ValueType.json: return ((JsonObject)value).Serialize(depth, tab);
-                case ValueType.array: return ((JsonArray)value).Serialize(depth, tab);
-                default: return this.ToString();
+                case ValueType.json: { ((JsonObject)value).Serialize(ref strb, currentTab, tab); break; }
+                case ValueType.array: { ((JsonArray)value).Serialize(ref strb, currentTab, tab); break; }
+                default: { this.RawToString(ref strb); break;}
             }
+        }
+        public string Serialize(string currentTab = "", string tab = "    ") {
+            StringBuilder strb = new StringBuilder();
+            this.RawToString(ref strb);
+            return strb.ToString();
         }
     }
     public class JsonArray {
@@ -162,29 +180,35 @@ namespace JsonSharp
             int ptr = 0;
             return JsonArray.Parse(ref json, ref ptr);
         }
-        public override string ToString() {
-            string ret = "[";
+        public void RawToString(ref StringBuilder strb) {
+            strb.Append("[");
             for(int i = 0; i < elements.Count; i++) {
-                ret += elements[i].ToString();
+                elements[i].RawToString(ref strb);
                 if(i != elements.Count - 1)
-                    ret += ", ";
+                    strb.Append(", ");
             }
-            ret += "]";
-            return ret;
+            strb.Append("]");
         }
-        public string Serialize(int depth = 0, string tab = "    ") {
-            string prefixTab = "";
-            for(int i = 1; i <= depth; i++)
-                prefixTab += tab;
-            string ret = "[\n";
+        public override string ToString() {
+            StringBuilder strb = new StringBuilder();
+            this.RawToString(ref strb);
+            return strb.ToString();
+        }
+        public void Serialize(ref StringBuilder strb, string currentTab = "", string tab = "    ") {
+            strb.Append("[\n");
             for(int i = 0; i < elements.Count; i++) {
-                ret += prefixTab + tab + elements[i].Serialize(depth + 1, tab);
+                strb.Append(currentTab + tab);
+                elements[i].Serialize(ref strb, currentTab + tab, tab);
                 if(i != elements.Count - 1)
-                    ret += ", ";
-                ret += '\n';
+                    strb.Append(", ");
+                strb.Append('\n');
             }
-            ret += prefixTab + "]";
-            return ret;
+            strb.Append(currentTab + "]");
+        }
+        public string Serialize(string currentTab = "", string tab = "    ") {
+            StringBuilder strb = new StringBuilder();
+            this.RawToString(ref strb);
+            return strb.ToString();
         }
     }
     public class JsonObject {
@@ -234,31 +258,38 @@ namespace JsonSharp
             int ptr = 0;
             return JsonObject.Parse(ref json, ref ptr);
         }
-        public override string ToString() {
-            string ret = "{";
+        public void RawToString(ref StringBuilder strb) {
+            strb.Append("{");
             for(int i = 0; i < keys.Count; i++) {
-                ret += "\"" + Reader.Escape(keys[i]) + "\": ";
-                ret += pairs[keys[i]].ToString();
+                strb.Append("\"" + Reader.Escape(keys[i]) + "\": ");
+                pairs[keys[i]].RawToString(ref strb);
                 if(i != keys.Count - 1)
-                    ret += ", ";
+                    strb.Append(", ");
             }
-            ret += "}";
-            return ret;
+            strb.Append("}");
         }
-        public string Serialize(int depth = 0, string tab = "    ") {
-            string prefixTab = "";
-            for(int i = 1; i <= depth; i++)
-                prefixTab += tab;
-            string ret = "{\n";
+        public override string ToString() {
+            StringBuilder strb = new StringBuilder();
+            this.RawToString(ref strb);
+            return strb.ToString();
+        }
+        public void Serialize(ref StringBuilder strb, string currentTab = "", string tab = "    ") {
+            strb.Append("{\n");
             for(int i = 0; i < keys.Count; i++) {
-                ret += prefixTab + tab + "\"" + Reader.Escape(keys[i]) + "\": ";
-                ret += pairs[keys[i]].Serialize(depth + 1, tab);
+                strb.Append(currentTab + tab + "\"");
+                strb.Append(Reader.Escape(keys[i]));
+                strb.Append("\": ");
+                pairs[keys[i]].Serialize(ref strb, currentTab + tab, tab);
                 if(i != keys.Count - 1)
-                    ret += ", ";
-                ret += '\n';
+                    strb.Append(", ");
+                strb.Append('\n');
             }
-            ret += prefixTab + "}";
-            return ret;
+            strb.Append(currentTab + "}");
+        }
+        public string Serialize(string currentTab = "", string tab = "    ") {
+            StringBuilder strb = new StringBuilder();
+            this.Serialize(ref strb, currentTab, tab);
+            return strb.ToString();
         }
     }
 }

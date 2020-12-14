@@ -10,20 +10,19 @@ namespace Tester
     {
         static void Main(string[] args)
         {   
-            string read = System.IO.File.ReadAllText("MOCK_DATA.json");
+            string read = System.IO.File.ReadAllText("in.json");
             DateTime now = DateTime.Now;
             // JsonObject obj = JsonObject.Parse(read);
             JsonObject obj = JsonObject.Parse(read);
             DateTime finish = DateTime.Now;
             Console.WriteLine("Parse in {0} s", (finish - now).TotalSeconds);
-            StringBuilder strb = new StringBuilder(16384);
             now = DateTime.Now;
             string ts = "";
-            ts = obj.Serialize();
+            ts = obj["nest"].Serialize();
             // obj.Serialize(ref strb, "", "    ");
             finish = DateTime.Now;
             Console.WriteLine("Serialize in {0} s", (finish - now).TotalSeconds);
-            System.IO.File.WriteAllText("serialize.json", ts);
+            System.IO.File.WriteAllText("out.json", ts);
         }
     }
 }

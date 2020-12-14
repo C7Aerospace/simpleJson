@@ -93,6 +93,57 @@ namespace JsonSharp
             this.type = type;
             this.value = value;
         }
+        public JsonValue this[string index] {
+            get {
+                if(type != ValueType.json) throw new Exception("Object is not a JSON object.");
+                return ((JsonObject)this.value)[index];
+            }
+            set {
+                if(type != ValueType.json) throw new Exception("Object is not a JSON object.");
+                ((JsonObject)this.value)[index] = value;
+            }
+        }
+        public JsonValue this[int index] {
+            get {
+                if(type != ValueType.array) throw new Exception("Object is not a array object.");
+                return ((JsonArray)this.value)[index];
+            }
+            set {
+                if(type != ValueType.array) throw new Exception("Object is not a array object.");
+                ((JsonArray)this.value)[index] = value;
+            }
+        }
+        public static implicit operator string(JsonValue val) {
+            return val.ToString();
+        }
+        public static implicit operator Int64(JsonValue val) {
+            if(val.type != ValueType.integer || val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return (Int64)val.value;
+                else return (Int64)(decimal)val.value;
+            }
+        }
+        public static implicit operator decimal(JsonValue val) {
+            if(val.type != ValueType.integer || val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return (decimal)(Int64)val.value;
+                else return (decimal)val.value;
+            }
+        }
+        public static implicit operator JsonObject(JsonValue val) {
+            if(val.type != ValueType.json) throw new Exception("Object is not a JSON object");
+            return (JsonObject)val.value;
+        }
+        public static implicit operator JsonArray(JsonValue val) {
+            if(val.type != ValueType.array) throw new Exception("Object is not a array object");
+            return (JsonArray)val.value;
+        }
+        public static implicit operator bool(JsonValue val) {
+            if(val.type != ValueType.boolean) throw new Exception("Object is not a boolean object");
+            return (bool)val.value;
+        }
         public static JsonValue Parse(ref string json, ref int ptr) {
             if(json[ptr] == '\"')
                 return new JsonValue(ValueType.str, Reader.ReadString(ref json, ref ptr));
@@ -144,7 +195,7 @@ namespace JsonSharp
         }
         public string Serialize(string currentTab = "", string tab = "    ") {
             StringBuilder strb = new StringBuilder();
-            this.RawToString(ref strb);
+            this.Serialize(ref strb, currentTab, tab);
             return strb.ToString();
         }
     }
@@ -195,6 +246,10 @@ namespace JsonSharp
             return strb.ToString();
         }
         public void Serialize(ref StringBuilder strb, string currentTab = "", string tab = "    ") {
+            if(elements.Count == 0) {
+                strb.Append("[]");
+                return;
+            }
             strb.Append("[\n");
             for(int i = 0; i < elements.Count; i++) {
                 strb.Append(currentTab + tab);
@@ -207,7 +262,7 @@ namespace JsonSharp
         }
         public string Serialize(string currentTab = "", string tab = "    ") {
             StringBuilder strb = new StringBuilder();
-            this.RawToString(ref strb);
+            this.Serialize(ref strb, currentTab, tab);
             return strb.ToString();
         }
     }
@@ -274,6 +329,10 @@ namespace JsonSharp
             return strb.ToString();
         }
         public void Serialize(ref StringBuilder strb, string currentTab = "", string tab = "    ") {
+            if(pairs.Count == 0 && keys.Count == 0) {
+                strb.Append("{}");
+                return;
+            }
             strb.Append("{\n");
             for(int i = 0; i < keys.Count; i++) {
                 strb.Append(currentTab + tab + "\"");

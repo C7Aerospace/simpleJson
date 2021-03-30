@@ -89,6 +89,10 @@ namespace JsonSharp
     public class JsonValue {
         ValueType type;
         object value;
+        public JsonValue() {
+            this.type = ValueType.nulltype;
+            this.value = null;
+        }
         public JsonValue(ValueType type, object value) {
             this.type = type;
             this.value = value;
@@ -113,23 +117,99 @@ namespace JsonSharp
                 ((JsonArray)this.value)[index] = value;
             }
         }
-        public static implicit operator string(JsonValue val) {
-            return val.ToString();
+        public static implicit operator JsonValue(JsonObject val) {
+            return new JsonValue(ValueType.json, val);
         }
-        public static implicit operator Int64(JsonValue val) {
-            if(val.type != ValueType.integer || val.type != ValueType.number)
+        public static implicit operator JsonValue(JsonArray val) {
+            return new JsonValue(ValueType.array, val);
+        }
+        public static implicit operator JsonValue(string val) {
+            return new JsonValue(ValueType.str, val);
+        }
+        public static implicit operator JsonValue(UInt16 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(UInt32 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(UInt64 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(Int16 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(Int32 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(Int64 val) {
+            return new JsonValue(ValueType.integer, Convert.ToInt64(val));
+        }
+        public static implicit operator JsonValue(decimal val) {
+            return new JsonValue(ValueType.number, val);
+        }
+        public static implicit operator JsonValue(bool val) {
+            return new JsonValue(ValueType.boolean, val);
+        }
+        public static implicit operator string(JsonValue val) {
+            if(val.type != ValueType.str)
+                return val.ToString();
+            else
+                return val.value.ToString();
+        }
+        public static implicit operator UInt16(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
                 throw new Exception("Object is not a number.");
             else {
-                if(val.type == ValueType.integer) return (Int64)val.value;
-                else return (Int64)(decimal)val.value;
+                if(val.type == ValueType.integer) return Convert.ToUInt16(val.value);
+                else return Convert.ToUInt16(val.value);
+            }
+        }
+        public static implicit operator UInt32(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return Convert.ToUInt32(val.value);
+                else return Convert.ToUInt32(val.value);
+            }
+        }
+        public static implicit operator UInt64(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return Convert.ToUInt64(val.value);
+                else return Convert.ToUInt64(val.value);
+            }
+        }
+        public static implicit operator Int16(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return Convert.ToInt16(val.value);
+                else return Convert.ToInt16(val.value);
+            }
+        }
+        public static implicit operator Int32(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return Convert.ToInt32(val.value);
+                else return Convert.ToInt32(val.value);
+            }
+        }
+        public static implicit operator Int64(JsonValue val) {
+            if(val.type != ValueType.integer && val.type != ValueType.number)
+                throw new Exception("Object is not a number.");
+            else {
+                if(val.type == ValueType.integer) return Convert.ToInt64(val.value);
+                else return Convert.ToInt64(val.value);
             }
         }
         public static implicit operator decimal(JsonValue val) {
-            if(val.type != ValueType.integer || val.type != ValueType.number)
+            if(val.type != ValueType.integer && val.type != ValueType.number)
                 throw new Exception("Object is not a number.");
             else {
-                if(val.type == ValueType.integer) return (decimal)(Int64)val.value;
-                else return (decimal)val.value;
+                if(val.type == ValueType.integer) return Convert.ToDecimal(val.value);
+                else return Convert.ToDecimal(val.value);
             }
         }
         public static implicit operator JsonObject(JsonValue val) {
